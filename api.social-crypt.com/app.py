@@ -23,75 +23,50 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 app = Flask(__name__)
 
 
-# @app.route('/twitter')
-# def hello_world():
-#     consumer_key = os.environ["API_KEY"]
-#     consumer_secret = os.environ["API_KEY_SECRET"]
-#     access_token = os.environ["ACCESS_TOKEN"]
-#     access_token_secret = os.environ["ACCESS_TOKEN_SECRET"]
-#     bearer_token = os.environ["BEARER_TOKEN"]
-
-#     # client = tweepy.Client(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-#     client = tweepy.Client(consumer_key= consumer_key,consumer_secret= consumer_secret,access_token= access_token,access_token_secret= access_token_secret)
-#     query = 'news'
-#     tweets = client.search_recent_tweets(query=query, max_results=10)
-#     for tweet in tweets.data:
-#         print(tweet.text)
-#         # print(client.get_users_tweets("JayeshVP24"))
-#         print(client.search_recent_tweets("nextjs"))
-
-#         # auth = tweepy.OAuth1UserHandler(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-
-#     # api = tweepy.API(auth)
-#     # id = request.args['id']
-
-#     # tweets = api.search_tweets(id, tweet_mode="extended")
-#     # for tweet in tweets:
-#     #     try:
-#     #         print(tweet..full_text)
-#     #         print("=====")
-#     #     except AttributeError:
-#     #         print(tweet.full_text)
-#     #         print("=====")
-    # return "Hello"
-
-
 @app.route('/twitter')
 def index():
-    query = "https://www.rt.com/russia/551440-ukraine-us-financed-biolaboratories/"
-    tweets = []
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items():
-        obj = {
-            "userid": tweet.id,
-            "username":tweet.user.username,
-            "retweet":tweet.retweetCount,
-            "likecount" : tweet.likeCount,
-            "hashtags" : tweet.hashtags,
-        }
-        tweets.append(obj)
-        if(len(tweets) == 200):
+    query = "anna"
+    retweet = 0
+    likecount = 0
+    hashtags = []
+    i=0
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        likecount += tweet.likeCount
+        retweet += tweet.retweetCount + tweet.quoteCount
+        if(tweet.hashtags != None):
+            hashtags.append([h for h in tweet.hashtags])
+         
+        
+        if(i==200):
             break
-        print(len(tweets))
+        i += 1
+    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":hashtags}]
+    
     return jsonify({'result':tweets})
+
+
+@app.route('/xyz')
+def xyz():
+    query = "AksNema"
+    tweets = []
+    for tweet in snstwitter.TwitterProfileScraper(query).get_items():
+        tweets.append(tweet.date)
+    return 
 
 
 
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": "Bearer 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"}
+API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
+
 
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)
+	return response.json()
+
+def queryprop(payload):
+	response = requests.post(API_URL_PROP, headers=headers, json=payload)
 	return response.json()
 
 
@@ -175,6 +150,32 @@ def plotly_wordcloud2():
 #                    max_words = 200,
 #                    max_font_size = 100)
 #     wc.generate(text[0]['summary_text'])
+@app.route('/propaganda')
+def propaganda():
+    url = 'https://www.newsweek.com/russia-ukraine-nazis-baltic-states-propaganda-1776075'
+    goose = Goose()
+    articles = goose.extract(url)
+    output = queryprop({
+	"inputs":  articles.cleaned_text[0:600]
+    })
+    
+    num = str(output[0][0]['score'])
+    return num
+
+	
+
+@app.route('/cloud')
+def plotly_wordcloud():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    text = query({
+	"inputs":  articles.cleaned_text
+    })
+    wc = WordCloud(stopwords = set(STOPWORDS),
+                   max_words = 200,
+                   max_font_size = 100)
+    wc.generate(text[0]['summary_text'])
     
 #     word_list=[]
 #     freq_list=[]
