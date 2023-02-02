@@ -1,4 +1,5 @@
-from flask import Flask
+from io import BytesIO
+from flask import Flask 
 import os
 import tweepy
 from dotenv import load_dotenv
@@ -8,6 +9,15 @@ import requests
 from goose3 import Goose
 from wordcloud import WordCloud, STOPWORDS
 import plotly.graph_objs as go
+import json
+import plotly
+import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
+import base64
+# from flask import send_file
+from flask import send_file
+
 app = Flask(__name__)
 
 
@@ -70,6 +80,30 @@ def news():
     
     return output[0]['summary_text']
 
+@app.route('/cloud2')
+def plotly_wordcloud2():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    text = articles.cleaned_text
+    wordcloud = WordCloud(width=1280, height=853, margin=0,
+                      colormap='Blues').generate(text)
+    wordcloud.to_file("./wordcloud.png")
+    # plt.imshow(wordcloud, interpolation='bilinear')
+    # plt.axis('off')
+    # plt.margins(x=0, y=0)
+    # # plt.show()
+    # # img = BytesIO()
+
+    # plt.savefig("./wordcloud.png", format='png')
+    # plt.imsave("./wordcloud.png", format='png')
+    # img.seek(0)
+    # # nimg = Image.frombytes("RGBA", (128, 128), img, 'raw')
+    # nimg = Image.frombuffer(img)
+    # nimg.save("./wordcloud.png")
+    # plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    return send_file("./wordcloud.png", mimetype='image/png')
+    # return render_template('plot.html', plot_url=plot_url)
 
 @app.route('/propaganda')
 def propaganda():
@@ -140,8 +174,10 @@ def plotly_wordcloud():
                         'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
     
     fig = go.Figure(data=[trace], layout=layout)
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    print(graphJSON)
     print(type(fig))
-    return render_template(fig)
+    return graphJSON
 
 
 if __name__ == '__main__':
