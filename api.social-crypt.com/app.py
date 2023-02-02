@@ -73,26 +73,69 @@ def queryprop(payload):
 
 @app.route('/sentiment')
 def sentiment():
-
-	
-    sid_obj = SentimentIntensityAnalyzer()
-    
-    sentiment_dict = sid_obj.polarity_scores([sentence])
-    print(sentiment_dict['neg']*100, "% Negative")
-    print(sentiment_dict['pos']*100, "% Positive")
-    print("Review Overall Analysis", end = " ")
-
+    query = "ukraine"
+    retweet = 0
+    likecount = 0
+    hashtags = []
     senti=[]
-    if sentiment_dict['compound'] >= 0.05 :
-        senti.append("Positive")
-    elif sentiment_dict['compound'] < 0.05 :
-        senti.append("Negative")
-    else :
-        senti.append("Neutral")
-    print(senti)
+    i=0
+    positive=0
+    negative=0
+    neutral=0
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        if tweet.lang=="en":
+            i+=1
+            if(i==200):
+                break
+            sentence= tweet.rawContent
+            print(sentence)
+            sid_obj = SentimentIntensityAnalyzer()
+            sentiment_dict = sid_obj.polarity_scores([sentence])
+            print(sentiment_dict['neg']*100, "% Negative")
+            print(sentiment_dict['pos']*100, "% Positive")
+            print("Review Overall Analysis", end = " ") 
+            if sentiment_dict['compound'] >= 0.05 :
+                positive+=1
+            elif sentiment_dict['compound'] <= -0.05 :
+                negative+=1
+            else :
+                neutral+=1
+    senti=[positive, negative, neutral]
+            
+        
     return jsonify({"result":senti})
-    
+            
+# @app.route('/sentiment_article')
+# def sentiment_article():
+#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+#     goose = Goose()
+#     articles = goose.extract(url)
+#     output = articles.cleaned_text
 
+
+
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        if tweet.lang=="en":
+            i+=1
+            if(i==200):
+                break
+            sentence= tweet.rawContent
+            print(sentence)
+            sid_obj = SentimentIntensityAnalyzer()
+            sentiment_dict = sid_obj.polarity_scores([sentence])
+            print(sentiment_dict['neg']*100, "% Negative")
+            print(sentiment_dict['pos']*100, "% Positive")
+            print("Review Overall Analysis", end = " ") 
+            if sentiment_dict['compound'] >= 0.05 :
+                positive+=1
+            elif sentiment_dict['compound'] <= -0.05 :
+                negative+=1
+            else :
+                neutral+=1
+    senti=[positive, negative, neutral]
+            
+        
+    return jsonify({"result":senti})
 
     
 
