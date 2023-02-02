@@ -15,9 +15,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 import base64
+import pandas as pd
 # from flask import send_file
 from flask import send_file
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 
 app = Flask(__name__)
 
@@ -28,11 +29,10 @@ queryString = None
 
 @app.route('/twitter')
 def index():
-    query = "russia"
+    query = request.args['query']
     retweet = 0
     likecount = 0
-    sharecount=0
-    hashtags = []
+    hashtags = set([])
     i=0
     global twitterData
     global queryString
@@ -52,24 +52,26 @@ def index():
         likecount += tweet.likeCount
         retweet += tweet.retweetCount + tweet.quoteCount
         if(tweet.hashtags != None):
-            hashtags.append([h for h in tweet.hashtags])
-         
+            for h in tweet.hashtags:
+                hashtags.add(h)
+        
+        i+= 1
         
         if(i==200):
             break
-        i += 1
-    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":hashtags}]
+        
+    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}]
     
     return jsonify({'result':tweets})
 
 
 @app.route('/xyz')
 def xyz():
-    query = "AksNema"
+    query = request.args['query']
     tweets = []
     for tweet in snstwitter.TwitterProfileScraper(query).get_items():
         tweets.append(tweet.date)
-    return 
+    return tweets
 
 
 
@@ -96,7 +98,7 @@ def query_hate(payload):
 
 @app.route('/sentiment')
 def sentiment():
-    query = "russia"
+    query = request.args['query']
     retweet = 0
     likecount = 0
     hashtags = []
@@ -189,7 +191,7 @@ def hate_speech():
 
 @app.route('/news')
 def news():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     output = query({
@@ -201,7 +203,7 @@ def news():
 
 @app.route('/cloud2')
 def plotly_wordcloud2():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = articles.cleaned_text
@@ -238,7 +240,7 @@ def plotly_wordcloud2():
 #     wc.generate(text[0]['summary_text'])
 @app.route('/propaganda')
 def propaganda():
-    url = 'https://www.newsweek.com/russia-ukraine-nazis-baltic-states-propaganda-1776075'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     output = queryprop({
@@ -252,7 +254,7 @@ def propaganda():
 
 @app.route('/cloud')
 def plotly_wordcloud():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = query({
@@ -309,6 +311,20 @@ def plotly_wordcloud():
 #     print(graphJSON)
 #     print(type(fig))
 #     return graphJSON
+
+@app.route('/authenticity')
+def auth():
+    name = request.args['name']
+    lis = []
+    df = pd.read_csv('blacklist.csv')
+    for i in range(len(df)):
+        lis.append(df.loc[i, "MBFC"])
+    
+    for l in lis:
+        if(name.__contains__(l)):
+            return {"result":True}
+
+    return { "result": False }
 
 
 if __name__ == '__main__':
