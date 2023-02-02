@@ -1,5 +1,5 @@
 from io import BytesIO
-from flask import Flask 
+from flask import Flask, jsonify
 import os
 import tweepy
 from dotenv import load_dotenv
@@ -15,87 +15,183 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 import base64
+import pandas as pd
 # from flask import send_file
 from flask import send_file
 
+
 app = Flask(__name__)
 
+twitterData = None
+queryString = None
 
-# @app.route('/twitter')
-# def hello_world():
-#     consumer_key = os.environ["API_KEY"]
-#     consumer_secret = os.environ["API_KEY_SECRET"]
-#     access_token = os.environ["ACCESS_TOKEN"]
-#     access_token_secret = os.environ["ACCESS_TOKEN_SECRET"]
-#     bearer_token = os.environ["BEARER_TOKEN"]
-
-#     # client = tweepy.Client(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-#     client = tweepy.Client(consumer_key= consumer_key,consumer_secret= consumer_secret,access_token= access_token,access_token_secret= access_token_secret)
-#     query = 'news'
-#     tweets = client.search_recent_tweets(query=query, max_results=10)
-#     for tweet in tweets.data:
-#         print(tweet.text)
-#         # print(client.get_users_tweets("JayeshVP24"))
-#         print(client.search_recent_tweets("nextjs"))
-
-#         # auth = tweepy.OAuth1UserHandler(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-
-#     # api = tweepy.API(auth)
-#     # id = request.args['id']
-
-#     # tweets = api.search_tweets(id, tweet_mode="extended")
-#     # for tweet in tweets:
-#     #     try:
-#     #         print(tweet..full_text)
-#     #         print("=====")
-#     #     except AttributeError:
-#     #         print(tweet.full_text)
-#     #         print("=====")
-    # return "Hello"
-
+# print(type(twitterData))
 
 @app.route('/twitter')
 def index():
-    query = "https://www.rt.com/russia/551440-ukraine-us-financed-biolaboratories/"
-    tweets = []
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items():
-        obj = {
-            "userid": tweet.id,
-            "username":tweet.user.username,
-            "retweet":tweet.retweetCount,
-            "likecount" : tweet.likeCount,
-            "hashtags" : tweet.hashtags,
-        }
-        tweets.append(obj)
-        if(len(tweets) == 200):
+    query = request.args['query']
+    retweet = 0
+    likecount = 0
+    hashtags = set([])
+    i=0
+    global twitterData
+    global queryString
+    print("Url: Twitter, data: ", twitterData)
+    if twitterData is None:
+        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+        queryString = query
+    else:
+        if queryString != query:
+            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+            queryString = query
+        else:
+            print("not scraping again")
+        
+    for tweet in twitterData: 
+        # print(vars(tweet)) 
+        likecount += tweet.likeCount
+        retweet += tweet.retweetCount + tweet.quoteCount
+        if(tweet.hashtags != None):
+            for h in tweet.hashtags:
+                hashtags.add(h)
+        
+        i+= 1
+        
+        if(i==200):
             break
-        print(len(tweets))
+        
+    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}]
+    
     return jsonify({'result':tweets})
+
+
+@app.route('/xyz')
+def xyz():
+    query = request.args['query']
+    tweets = []
+    for tweet in snstwitter.TwitterProfileScraper(query).get_items():
+        tweets.append(tweet.date)
+    return tweets
 
 
 
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": "Bearer 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"}
+API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
+API_URL_HATE = "https://api-inference.huggingface.co/models/IMSyPP/hate_speech_en"
+
 
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)
 	return response.json()
 
+def queryprop(payload):
+	response = requests.post(API_URL_PROP, headers=headers, json=payload)
+	return response.json()
+
+def query_hate(payload):
+	response = requests.post(API_URL_HATE, headers=headers, json=payload)
+	return response.json()
+
+
+
+@app.route('/sentiment')
+def sentiment():
+    query = request.args['query']
+    retweet = 0
+    likecount = 0
+    hashtags = []
+    senti=[]
+    i=0
+    positive=0
+    negative=0
+    neutral=0
+    global twitterData
+    global queryString
+    print("Url: Sentiment, data: ", twitterData)
+    if twitterData is None:
+        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+        queryString = query
+    else:
+        if queryString != query:
+            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+            queryString = query
+        
+    for tweet in twitterData: 
+        if tweet.lang=="en":
+            i+=1
+            if(i==200):
+                break
+            sentence= tweet.rawContent
+            print(sentence)
+            sid_obj = SentimentIntensityAnalyzer()
+            sentiment_dict = sid_obj.polarity_scores([sentence])
+            print(sentiment_dict['neg']*100, "% Negative")
+            print(sentiment_dict['pos']*100, "% Positive")
+            print("Review Overall Analysis", end = " ") 
+            if sentiment_dict['compound'] >= 0.05 :
+                positive+=1
+            elif sentiment_dict['compound'] <= -0.05 :
+                negative+=1
+            else :
+                neutral+=1
+    senti=[positive, negative, neutral]
+            
+        
+    return jsonify({"result":senti})
+            
+@app.route('/sentiment_article')
+def sentiment_article():
+    senti=[]
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    sentence1 = articles.cleaned_text
+    sid_obj = SentimentIntensityAnalyzer()
+    sentiment_dict = sid_obj.polarity_scores([sentence1])
+    print(sentiment_dict['neg']*100, "% Negative")
+    print(sentiment_dict['pos']*100, "% Positive")
+    print("Review Overall Analysis", end = " ") 
+    if sentiment_dict['compound'] >= 0.05 :
+        senti.append("Positive")
+    elif sentiment_dict['compound'] <= -0.05 :
+        senti.append("Negative")
+    else :
+        senti.append("Neutral")
+    return jsonify({"result":senti})
+
+
+
+@app.route('/hate_speech')
+def hate_speech():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    sentence = articles.cleaned_text[0:500]
+    print(sentence)
+    output=query_hate({
+	"inputs": str(sentence)})
+    print(output[0][0])
+    result = {}
+    for data in output[0]:
+        if data['label'] == "LABEL_0":
+            result["ACCEPTABLE"] = data['score']
+        elif data['label'] == "LABEL_1":
+            result["INAPPROAPRIATE"] = data['score']
+        elif data['label'] == "LABEL_2":
+            result["OFFENSIVE"] = data['score']
+        elif data['label'] == "LABEL_3":
+            result["VIOLENT"] = data['score']
+            
+    return jsonify(result)
+
+
+
 
 @app.route('/summary')
 def summary():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     output = query({
@@ -107,7 +203,7 @@ def summary():
 
 @app.route('/cloud2')
 def plotly_wordcloud2():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = articles.cleaned_text
@@ -130,9 +226,35 @@ def plotly_wordcloud2():
     return send_file("./wordcloud.png", mimetype='image/png')
     # return render_template('plot.html', plot_url=plot_url)
 
+# @app.route('/cloud')
+# def plotly_wordcloud():
+#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+#     goose = Goose()
+#     articles = goose.extract(url)
+#     text = query({
+# 	"inputs":  articles.cleaned_text
+#     })
+#     wc = WordCloud(stopwords = set(STOPWORDS),
+#                    max_words = 200,
+#                    max_font_size = 100)
+#     wc.generate(text[0]['summary_text'])
+@app.route('/propaganda')
+def propaganda():
+    url = request.args['url']
+    goose = Goose()
+    articles = goose.extract(url)
+    output = queryprop({
+	"inputs":  articles.cleaned_text[0:600]
+    })
+    
+    num = str(output[0][0]['score'])
+    return num
+
+	
+
 @app.route('/cloud')
 def plotly_wordcloud():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = query({
@@ -143,52 +265,66 @@ def plotly_wordcloud():
                    max_font_size = 100)
     wc.generate(text[0]['summary_text'])
     
-    word_list=[]
-    freq_list=[]
-    fontsize_list=[]
-    position_list=[]
-    orientation_list=[]
-    color_list=[]
+#     word_list=[]
+#     freq_list=[]
+#     fontsize_list=[]
+#     position_list=[]
+#     orientation_list=[]
+#     color_list=[]
 
-    for (word, freq), fontsize, position, orientation, color in wc.layout_:
-        word_list.append(word)
-        freq_list.append(freq)
-        fontsize_list.append(fontsize)
-        position_list.append(position)
-        orientation_list.append(orientation)
-        color_list.append(color)
+#     for (word, freq), fontsize, position, orientation, color in wc.layout_:
+#         word_list.append(word)
+#         freq_list.append(freq)
+#         fontsize_list.append(fontsize)
+#         position_list.append(position)
+#         orientation_list.append(orientation)
+#         color_list.append(color)
         
-    # get the positions
-    x=[]
-    y=[]
-    for i in position_list:
-        x.append(i[0])
-        y.append(i[1])
+#     # get the positions
+#     x=[]
+#     y=[]
+#     for i in position_list:
+#         x.append(i[0])
+#         y.append(i[1])
             
-    # get the relative occurence frequencies
-    new_freq_list = []
-    for i in freq_list:
-        new_freq_list.append(i*100)
-    new_freq_list
+#     # get the relative occurence frequencies
+#     new_freq_list = []
+#     for i in freq_list:
+#         new_freq_list.append(i*100)
+#     new_freq_list
     
-    trace = go.Scatter(x=x, 
-                       y=y, 
-                       textfont = dict(size=new_freq_list,
-                                       color=color_list),
-                       hoverinfo='text',
-                       hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
-                       mode='text',  
-                       text=word_list
-                      )
+#     trace = go.Scatter(x=x, 
+#                        y=y, 
+#                        textfont = dict(size=new_freq_list,
+#                                        color=color_list),
+#                        hoverinfo='text',
+#                        hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
+#                        mode='text',  
+#                        text=word_list
+#                       )
     
-    layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
-                        'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
+#     layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
+#                         'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
     
-    fig = go.Figure(data=[trace], layout=layout)
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(graphJSON)
-    print(type(fig))
-    return graphJSON
+#     fig = go.Figure(data=[trace], layout=layout)
+#     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+#     print(graphJSON)
+#     print(type(fig))
+#     return graphJSON
+
+@app.route('/authenticity')
+def auth():
+    name = request.args['name']
+    lis = []
+    df = pd.read_csv('blacklist.csv')
+    for i in range(len(df)):
+        lis.append(df.loc[i, "MBFC"])
+    
+    for l in lis:
+        if(name.__contains__(l)):
+            return {"result":True}
+
+    return { "result": False }
 
 
 if __name__ == '__main__':
