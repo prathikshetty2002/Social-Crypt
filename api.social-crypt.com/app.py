@@ -10,52 +10,9 @@ import requests
 app = Flask(__name__)
 
 
-# @app.route('/twitter')
-# def hello_world():
-#     consumer_key = os.environ["API_KEY"]
-#     consumer_secret = os.environ["API_KEY_SECRET"]
-#     access_token = os.environ["ACCESS_TOKEN"]
-#     access_token_secret = os.environ["ACCESS_TOKEN_SECRET"]
-#     bearer_token = os.environ["BEARER_TOKEN"]
-
-#     # client = tweepy.Client(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-#     client = tweepy.Client(consumer_key= consumer_key,consumer_secret= consumer_secret,access_token= access_token,access_token_secret= access_token_secret)
-#     query = 'news'
-#     tweets = client.search_recent_tweets(query=query, max_results=10)
-#     for tweet in tweets.data:
-#         print(tweet.text)
-#         # print(client.get_users_tweets("JayeshVP24"))
-#         print(client.search_recent_tweets("nextjs"))
-
-#         # auth = tweepy.OAuth1UserHandler(
-#     #     consumer_key,
-#     #     consumer_secret,
-#     #     access_token,
-#     #     access_token_secret
-#     # )
-
-#     # api = tweepy.API(auth)
-#     # id = request.args['id']
-
-#     # tweets = api.search_tweets(id, tweet_mode="extended")
-#     # for tweet in tweets:
-#     #     try:
-#     #         print(tweet..full_text)
-#     #         print("=====")
-#     #     except AttributeError:
-#     #         print(tweet.full_text)
-#     #         print("=====")
-    # return "Hello"
-
-
 @app.route('/twitter')
 def index():
-    query = "https://www.rt.com/russia/551440-ukraine-us-financed-biolaboratories/"
+    query = "https://app.daily.dev/jayeshvp24"
     tweets = []
     for tweet in snstwitter.TwitterSearchScraper(query).get_items():
         obj = {
@@ -66,19 +23,25 @@ def index():
             "hashtags" : tweet.hashtags,
         }
         tweets.append(obj)
+        print(tweet.date)
         if(len(tweets) == 200):
             break
-        print(len(tweets))
     return jsonify({'result':tweets})
 
 
 from goose3 import Goose
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": "Bearer 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"}
+API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
+
 
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)
+	return response.json()
+
+def queryprop(payload):
+	response = requests.post(API_URL_PROP, headers=headers, json=payload)
 	return response.json()
 
 
@@ -93,6 +56,23 @@ def news():
     print(output)
     
     return output[0]['summary_text']
+
+
+@app.route('/propaganda')
+def propaganda():
+    url = 'https://www.newsweek.com/russia-ukraine-nazis-baltic-states-propaganda-1776075'
+    goose = Goose()
+    articles = goose.extract(url)
+    output = queryprop({
+	"inputs":  articles.cleaned_text[0:600]
+    })
+    
+    num = str(output[0][0]['score'])
+    return num
+
+	
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
