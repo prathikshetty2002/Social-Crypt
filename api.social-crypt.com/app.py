@@ -30,7 +30,7 @@ queryString = None
 
 @app.route('/twitter')
 def index():
-    query = "russia"
+    query = request.args['query']
     retweet = 0
     likecount = 0
     hashtags = set([])
@@ -66,11 +66,11 @@ def index():
 
 @app.route('/xyz')
 def xyz():
-    query = "AksNema"
+    query = request.args['query']
     tweets = []
     for tweet in snstwitter.TwitterProfileScraper(query).get_items():
         tweets.append(tweet.date)
-    return 
+    return tweets
 
 
 
@@ -317,12 +317,11 @@ def auth():
     lis = []
     df = pd.read_csv('blacklist.csv')
     for i in range(len(df)):
-        lis.append(i)
+        lis.append(df.loc[i, "MBFC"])
     
-    if name in lis:
-        return {
-            "result": True  
-        }
+    for l in lis:
+        if(name.__contains__(l)):
+            return {"result":True}
 
     return { "result": False }
 
