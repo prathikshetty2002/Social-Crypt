@@ -16,9 +16,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 import base64
+import pandas as pd
 # from flask import send_file
 from flask import send_file
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 
 app = Flask(__name__)
 
@@ -75,7 +76,7 @@ def queryprop(payload):
 
 @app.route('/sentiment')
 def sentiment():
-    query = "ukraine"
+    query = request.args['query']
     retweet = 0
     likecount = 0
     hashtags = []
@@ -84,6 +85,7 @@ def sentiment():
     positive=0
     negative=0
     neutral=0
+
     for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
         if tweet.lang=="en":
             i+=1
@@ -107,13 +109,12 @@ def sentiment():
         
     return jsonify({"result":senti})
             
-# @app.route('/sentiment_article')
-# def sentiment_article():
-#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
-#     goose = Goose()
-#     articles = goose.extract(url)
-#     output = articles.cleaned_text
-
+@app.route('/sentiment_article')
+def sentiment_article():
+    url = request.args['url']
+    goose = Goose()
+    articles = goose.extract(url)
+    output = articles.cleaned_text
 
 
     for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
@@ -148,7 +149,7 @@ def sentiment():
 
 @app.route('/news')
 def news():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     output = query({
@@ -160,7 +161,7 @@ def news():
 
 @app.route('/cloud2')
 def plotly_wordcloud2():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = articles.cleaned_text
@@ -197,7 +198,7 @@ def plotly_wordcloud2():
 #     wc.generate(text[0]['summary_text'])
 @app.route('/propaganda')
 def propaganda():
-    url = 'https://www.newsweek.com/russia-ukraine-nazis-baltic-states-propaganda-1776075'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     output = queryprop({
@@ -211,7 +212,7 @@ def propaganda():
 
 @app.route('/cloud')
 def plotly_wordcloud():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
     text = query({
@@ -268,6 +269,21 @@ def plotly_wordcloud():
 #     print(graphJSON)
 #     print(type(fig))
 #     return graphJSON
+
+@app.route('/authenticity')
+def auth():
+    name = request.args['name']
+    lis = []
+    df = pd.read_csv('blacklist.csv')
+    for i in range(len(df)):
+        lis.append(i)
+    
+    if name in lis:
+        return {
+            "result": True  
+        }
+
+    return { "result": False }
 
 
 if __name__ == '__main__':
