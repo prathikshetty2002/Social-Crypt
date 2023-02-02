@@ -56,10 +56,11 @@ export default function Home() {
           </div>
         </section>
 
-        <article>
-          <div>
-            <h1>About us</h1>
-            <p>
+        <article className="py-10 flex flex-col  lg:flex-row lg:justify-around lg:items-center">
+
+          <div className="lg:w-2/5" >
+            <h1 className="text-5xl font-bold mb-2">About us</h1>
+            <p className="text-lg">
               Nowadays, it can be difficult to tell the difference between
               credible information and misinformation online 🌐. To solve this
               problem, Social Crypt provides users with a solution that lets
@@ -69,18 +70,65 @@ export default function Home() {
               mentioned, Social Media Activity of the same information, Source
               Authenticity and a lot more.
             </p>
-            <p>
+            <p className="text-lg">
               Social Crypt is the solution you need to remain informed and make
-              informed decisions, whether you're a journalist, researcher, or
+              informed decisions, whether {"you're"} a journalist, researcher, or
               simply concerned about the reliability of the information you
               consume ⚠️.
             </p>
           </div>
-          <div>
+          <div className="lg:w-2/5">
+            <Image
+              alt="Hero Illustration"
+              src="/hero2.png"
+              width="550"
+              height="450"
+              className="w-full max-w-[55rem] mx-auto rounded-3xl"
+            />
+          </div>
+
+        </article>
+
+
+
+        <article className="py-10 flex flex-col  lg:flex-row lg:justify-around lg:items-center">
+
+          <div className="lg:w-2/5">
+            <Image
+              alt="Hero Illustration"
+              src="/hero3.png"
+              width="550"
+              height="450"
+              className="w-full max-w-[55rem] mx-auto rounded-3xl"
+            />
+          </div>
+
+
+          <div className="lg:w-2/5 space-y-2"  >
+            <h1 className="text-5xl font-bold mb-2">Features</h1>
+            <p className="text-base"> <span className="font-bold text-lg"> 📰 Sentiment Analysis </span>: Measures the sentiment of entities mentioned in articles, providing a balanced view of the information being presented.</p>
+            <p> <span className="font-bold text-lg"> ⚠️ Unrevealing Misinformation:</span> Helping users identify unreliable sources by detecting and flagging misleading or inaccurate information.</p>
+            <p> <span className="font-bold text-lg"> 🤖 Bot Activity Detection: </span> Identifies coordinated clusters of bots and automatons, providing insight into potential manipulation and disinformation campaigns.</p>
+            <p> <span className="font-bold text-lg"> 📱 Social Media Presence: </span> Explores the presence of the same information present on the social media like twitter and other metadata associated with it like like, share, top user retweeting it the most, etc.</p>
+
 
           </div>
         </article>
       </main>
+      <footer  className="w-full flex  bg-gray-800">
+          <div className="w-2/4 h-full">
+
+          </div>
+          <div className="w-2/4 flex justify-center items-center">
+            <div className="space-y-2">
+              <p className="text-xl text-white">Created by-</p>
+              <div className="space-x-2 flex items-center"><Image width="40"  height="40" src='/github.png'></Image><p className="text-lg text-white">jayesh Potlabattini</p></div>
+              <div className="space-x-2 flex items-center"><Image width="40" height="40" src='/github.png'/><p className="text-lg text-white">Hrishikesh Yadav</p></div>
+             <div className="space-x-2 flex items-center"><Image width="40" height="40" src='/github.png'/><p className="text-lg text-white">Prathik shetty</p></div>
+              <div className="space-x-2 flex items-center"><Image width="40" height="40" src='/github.png'/><p className="text-lg text-white">Roshan Patil</p></div>
+            </div>
+          </div>
+        </footer>
     </>
   );
 }
