@@ -1,6 +1,7 @@
 from io import BytesIO
-from flask import Flask 
+from flask import Flask, jsonify
 import os
+
 import tweepy
 from dotenv import load_dotenv
 from flask import request,jsonify
@@ -17,6 +18,7 @@ import numpy as np
 import base64
 # from flask import send_file
 from flask import send_file
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 
@@ -70,6 +72,80 @@ def queryprop(payload):
 	return response.json()
 
 
+
+@app.route('/sentiment')
+def sentiment():
+    query = "ukraine"
+    retweet = 0
+    likecount = 0
+    hashtags = []
+    senti=[]
+    i=0
+    positive=0
+    negative=0
+    neutral=0
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        if tweet.lang=="en":
+            i+=1
+            if(i==200):
+                break
+            sentence= tweet.rawContent
+            print(sentence)
+            sid_obj = SentimentIntensityAnalyzer()
+            sentiment_dict = sid_obj.polarity_scores([sentence])
+            print(sentiment_dict['neg']*100, "% Negative")
+            print(sentiment_dict['pos']*100, "% Positive")
+            print("Review Overall Analysis", end = " ") 
+            if sentiment_dict['compound'] >= 0.05 :
+                positive+=1
+            elif sentiment_dict['compound'] <= -0.05 :
+                negative+=1
+            else :
+                neutral+=1
+    senti=[positive, negative, neutral]
+            
+        
+    return jsonify({"result":senti})
+            
+# @app.route('/sentiment_article')
+# def sentiment_article():
+#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+#     goose = Goose()
+#     articles = goose.extract(url)
+#     output = articles.cleaned_text
+
+
+
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        if tweet.lang=="en":
+            i+=1
+            if(i==200):
+                break
+            sentence= tweet.rawContent
+            print(sentence)
+            sid_obj = SentimentIntensityAnalyzer()
+            sentiment_dict = sid_obj.polarity_scores([sentence])
+            print(sentiment_dict['neg']*100, "% Negative")
+            print(sentiment_dict['pos']*100, "% Positive")
+            print("Review Overall Analysis", end = " ") 
+            if sentiment_dict['compound'] >= 0.05 :
+                positive+=1
+            elif sentiment_dict['compound'] <= -0.05 :
+                negative+=1
+            else :
+                neutral+=1
+    senti=[positive, negative, neutral]
+            
+        
+    return jsonify({"result":senti})
+
+    
+
+
+
+
+
+
 @app.route('/news')
 def news():
     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
@@ -107,6 +183,18 @@ def plotly_wordcloud2():
     return send_file("./wordcloud.png", mimetype='image/png')
     # return render_template('plot.html', plot_url=plot_url)
 
+# @app.route('/cloud')
+# def plotly_wordcloud():
+#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+#     goose = Goose()
+#     articles = goose.extract(url)
+#     text = query({
+# 	"inputs":  articles.cleaned_text
+#     })
+#     wc = WordCloud(stopwords = set(STOPWORDS),
+#                    max_words = 200,
+#                    max_font_size = 100)
+#     wc.generate(text[0]['summary_text'])
 @app.route('/propaganda')
 def propaganda():
     url = 'https://www.newsweek.com/russia-ukraine-nazis-baltic-states-propaganda-1776075'
@@ -134,52 +222,52 @@ def plotly_wordcloud():
                    max_font_size = 100)
     wc.generate(text[0]['summary_text'])
     
-    word_list=[]
-    freq_list=[]
-    fontsize_list=[]
-    position_list=[]
-    orientation_list=[]
-    color_list=[]
+#     word_list=[]
+#     freq_list=[]
+#     fontsize_list=[]
+#     position_list=[]
+#     orientation_list=[]
+#     color_list=[]
 
-    for (word, freq), fontsize, position, orientation, color in wc.layout_:
-        word_list.append(word)
-        freq_list.append(freq)
-        fontsize_list.append(fontsize)
-        position_list.append(position)
-        orientation_list.append(orientation)
-        color_list.append(color)
+#     for (word, freq), fontsize, position, orientation, color in wc.layout_:
+#         word_list.append(word)
+#         freq_list.append(freq)
+#         fontsize_list.append(fontsize)
+#         position_list.append(position)
+#         orientation_list.append(orientation)
+#         color_list.append(color)
         
-    # get the positions
-    x=[]
-    y=[]
-    for i in position_list:
-        x.append(i[0])
-        y.append(i[1])
+#     # get the positions
+#     x=[]
+#     y=[]
+#     for i in position_list:
+#         x.append(i[0])
+#         y.append(i[1])
             
-    # get the relative occurence frequencies
-    new_freq_list = []
-    for i in freq_list:
-        new_freq_list.append(i*100)
-    new_freq_list
+#     # get the relative occurence frequencies
+#     new_freq_list = []
+#     for i in freq_list:
+#         new_freq_list.append(i*100)
+#     new_freq_list
     
-    trace = go.Scatter(x=x, 
-                       y=y, 
-                       textfont = dict(size=new_freq_list,
-                                       color=color_list),
-                       hoverinfo='text',
-                       hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
-                       mode='text',  
-                       text=word_list
-                      )
+#     trace = go.Scatter(x=x, 
+#                        y=y, 
+#                        textfont = dict(size=new_freq_list,
+#                                        color=color_list),
+#                        hoverinfo='text',
+#                        hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
+#                        mode='text',  
+#                        text=word_list
+#                       )
     
-    layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
-                        'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
+#     layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
+#                         'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
     
-    fig = go.Figure(data=[trace], layout=layout)
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    print(graphJSON)
-    print(type(fig))
-    return graphJSON
+#     fig = go.Figure(data=[trace], layout=layout)
+#     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+#     print(graphJSON)
+#     print(type(fig))
+#     return graphJSON
 
 
 if __name__ == '__main__':
