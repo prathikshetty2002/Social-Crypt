@@ -4,7 +4,7 @@ import tweepy
 from dotenv import load_dotenv
 from flask import request,jsonify
 import snscrape.modules.twitter as snstwitter
-import pandas as pd
+import requests
 
 
 app = Flask(__name__)
@@ -73,12 +73,26 @@ def index():
 
 
 from goose3 import Goose
+API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
+headers = {"Authorization": "Bearer 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"}
+
+
+def query(payload):
+	response = requests.post(API_URL, headers=headers, json=payload)
+	return response.json()
+
+
 @app.route('/news')
 def news():
     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
     goose = Goose()
     articles = goose.extract(url)
-    return articles.cleaned_text
+    output = query({
+	"inputs":  articles.cleaned_text
+    })
+    print(output)
+    
+    return output[0]['summary_text']
 
 if __name__ == '__main__':
     app.run(debug=True)
