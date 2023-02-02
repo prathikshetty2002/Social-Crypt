@@ -26,19 +26,21 @@ def index():
     query = "anna"
     retweet = 0
     likecount = 0
-    hashtags = []
+    hashtags = set([])
     i=0
     for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
         likecount += tweet.likeCount
         retweet += tweet.retweetCount + tweet.quoteCount
         if(tweet.hashtags != None):
-            hashtags.append([h for h in tweet.hashtags])
-         
+            for h in tweet.hashtags:
+                hashtags.add(h)
+        
+        i+= 1
         
         if(i==200):
             break
-        i += 1
-    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":hashtags}]
+        
+    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}]
     
     return jsonify({'result':tweets})
 
