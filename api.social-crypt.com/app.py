@@ -13,21 +13,33 @@ app = Flask(__name__)
 
 @app.route('/twitter')
 def index():
-    query = "https://app.daily.dev/jayeshvp24"
-    tweets = []
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items():
-        obj = {
-            "userid": tweet.id,
-            "username":tweet.user.username,
-            "retweet":tweet.retweetCount,
-            "likecount" : tweet.likeCount,
-            "hashtags" : tweet.hashtags,
-        }
-        tweets.append(obj)
-        print(tweet.date)
-        if(len(tweets) == 200):
+    query = "anna"
+    retweet = 0
+    likecount = 0
+    hashtags = []
+    i=0
+    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+        likecount += tweet.likeCount
+        retweet += tweet.retweetCount + tweet.quoteCount
+        if(tweet.hashtags != None):
+            hashtags.append([h for h in tweet.hashtags])
+         
+        
+        if(i==200):
             break
+        i += 1
+    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":hashtags}]
+    
     return jsonify({'result':tweets})
+
+
+@app.route('/xyz')
+def xyz():
+    query = "AksNema"
+    tweets = []
+    for tweet in snstwitter.TwitterProfileScraper(query).get_items():
+        tweets.append(tweet.date)
+    return 
 
 
 
