@@ -93,8 +93,8 @@ def query(payload):
 	return response.json()
 
 
-@app.route('/news')
-def news():
+@app.route('/summary')
+def summary():
     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
     goose = Goose()
     articles = goose.extract(url)
@@ -103,7 +103,7 @@ def news():
     })
     print(output)
     
-    return output[0]['summary_text']
+    return jsonify({"result": output[0]['summary_text']})
 
 @app.route('/cloud2')
 def plotly_wordcloud2():
