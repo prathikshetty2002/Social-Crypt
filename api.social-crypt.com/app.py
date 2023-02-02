@@ -22,15 +22,31 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 
+twitterData = None
+queryString = None
+
+# print(type(twitterData))
 
 @app.route('/twitter')
 def index():
-    query = "anna"
+    query = "russia"
     retweet = 0
     likecount = 0
     hashtags = []
     i=0
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+    global twitterData
+    global queryString
+    print("Url: Twitter, data: ", twitterData)
+    if twitterData is None:
+        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+        queryString = query
+    else:
+        if queryString != query:
+            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+            queryString = query 
+        else:
+            print("not scraping again")
+    for tweet in twitterData: 
         likecount += tweet.likeCount
         retweet += tweet.retweetCount + tweet.quoteCount
         if(tweet.hashtags != None):
@@ -73,7 +89,7 @@ def queryprop(payload):
 
 @app.route('/sentiment')
 def sentiment():
-    query = "ukraine"
+    query = "russia"
     retweet = 0
     likecount = 0
     hashtags = []
@@ -82,7 +98,18 @@ def sentiment():
     positive=0
     negative=0
     neutral=0
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
+    global twitterData
+    global queryString
+    print("Url: Sentiment, data: ", twitterData)
+    if twitterData is None:
+        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+        queryString = query
+    else:
+        if queryString != query:
+            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+            queryString = query
+        
+    for tweet in twitterData: 
         if tweet.lang=="en":
             i+=1
             if(i==200):
@@ -105,39 +132,26 @@ def sentiment():
         
     return jsonify({"result":senti})
             
-# @app.route('/sentiment_article')
-# def sentiment_article():
-#     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
-#     goose = Goose()
-#     articles = goose.extract(url)
-#     output = articles.cleaned_text
-
-
-
-    for tweet in snstwitter.TwitterSearchScraper(query).get_items(): 
-        if tweet.lang=="en":
-            i+=1
-            if(i==200):
-                break
-            sentence= tweet.rawContent
-            print(sentence)
-            sid_obj = SentimentIntensityAnalyzer()
-            sentiment_dict = sid_obj.polarity_scores([sentence])
-            print(sentiment_dict['neg']*100, "% Negative")
-            print(sentiment_dict['pos']*100, "% Positive")
-            print("Review Overall Analysis", end = " ") 
-            if sentiment_dict['compound'] >= 0.05 :
-                positive+=1
-            elif sentiment_dict['compound'] <= -0.05 :
-                negative+=1
-            else :
-                neutral+=1
-    senti=[positive, negative, neutral]
-            
-        
+@app.route('/sentiment_article')
+def sentiment_article():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    sentence1 = articles.cleaned_text
+    sid_obj = SentimentIntensityAnalyzer()
+    sentiment_dict = sid_obj.polarity_scores([sentence1])
+    print(sentiment_dict['neg']*100, "% Negative")
+    print(sentiment_dict['pos']*100, "% Positive")
+    print("Review Overall Analysis", end = " ") 
+    if sentiment_dict['compound'] >= 0.05 :
+        senti.append("Positive")
+    elif sentiment_dict['compound'] <= -0.05 :
+        senti.append("Negative")
+    else :
+        senti.append("Neutral")
     return jsonify({"result":senti})
 
-    
+
 
 
 
