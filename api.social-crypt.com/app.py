@@ -1,7 +1,6 @@
 from io import BytesIO
 from flask import Flask, jsonify
 import os
-
 import tweepy
 from dotenv import load_dotenv
 from flask import request,jsonify
@@ -32,6 +31,7 @@ def index():
     query = "russia"
     retweet = 0
     likecount = 0
+    sharecount=0
     hashtags = []
     i=0
     global twitterData
@@ -43,10 +43,12 @@ def index():
     else:
         if queryString != query:
             twitterData = snstwitter.TwitterSearchScraper(query).get_items()
-            queryString = query 
+            queryString = query
         else:
             print("not scraping again")
+        
     for tweet in twitterData: 
+        # print(vars(tweet)) 
         likecount += tweet.likeCount
         retweet += tweet.retweetCount + tweet.quoteCount
         if(tweet.hashtags != None):
@@ -74,6 +76,7 @@ def xyz():
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": "Bearer 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"}
 API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
+API_URL_HATE = "https://api-inference.huggingface.co/models/IMSyPP/hate_speech_en"
 
 
 
@@ -83,6 +86,10 @@ def query(payload):
 
 def queryprop(payload):
 	response = requests.post(API_URL_PROP, headers=headers, json=payload)
+	return response.json()
+
+def query_hate(payload):
+	response = requests.post(API_URL_HATE, headers=headers, json=payload)
 	return response.json()
 
 
@@ -134,6 +141,7 @@ def sentiment():
             
 @app.route('/sentiment_article')
 def sentiment_article():
+    senti=[]
     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
     goose = Goose()
     articles = goose.extract(url)
@@ -153,7 +161,28 @@ def sentiment_article():
 
 
 
-
+@app.route('/hate_speech')
+def hate_speech():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    sentence = articles.cleaned_text[0:500]
+    print(sentence)
+    output=query_hate({
+	"inputs": str(sentence)})
+    print(output[0][0])
+    result = {}
+    for data in output[0]:
+        if data['label'] == "LABEL_0":
+            result["ACCEPTABLE"] = data['score']
+        elif data['label'] == "LABEL_1":
+            result["INAPPROAPRIATE"] = data['score']
+        elif data['label'] == "LABEL_2":
+            result["OFFENSIVE"] = data['score']
+        elif data['label'] == "LABEL_3":
+            result["VIOLENT"] = data['score']
+            
+    return jsonify(result)
 
 
 
