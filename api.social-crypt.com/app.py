@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 from flask import request,jsonify
 import snscrape.modules.twitter as snstwitter
 import requests
-
-
+from goose3 import Goose
+from wordcloud import WordCloud, STOPWORDS
+import plotly.graph_objs as go
 app = Flask(__name__)
 
 
@@ -29,7 +30,7 @@ def index():
     return jsonify({'result':tweets})
 
 
-from goose3 import Goose
+
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": "Bearer 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"}
 API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
@@ -72,6 +73,63 @@ def propaganda():
 
 	
 
+@app.route('/cloud')
+def plotly_wordcloud():
+    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+    goose = Goose()
+    articles = goose.extract(url)
+    text = query({
+	"inputs":  articles.cleaned_text
+    })
+    wc = WordCloud(stopwords = set(STOPWORDS),
+                   max_words = 200,
+                   max_font_size = 100)
+    wc.generate(text[0]['summary_text'])
+    
+    word_list=[]
+    freq_list=[]
+    fontsize_list=[]
+    position_list=[]
+    orientation_list=[]
+    color_list=[]
+
+    for (word, freq), fontsize, position, orientation, color in wc.layout_:
+        word_list.append(word)
+        freq_list.append(freq)
+        fontsize_list.append(fontsize)
+        position_list.append(position)
+        orientation_list.append(orientation)
+        color_list.append(color)
+        
+    # get the positions
+    x=[]
+    y=[]
+    for i in position_list:
+        x.append(i[0])
+        y.append(i[1])
+            
+    # get the relative occurence frequencies
+    new_freq_list = []
+    for i in freq_list:
+        new_freq_list.append(i*100)
+    new_freq_list
+    
+    trace = go.Scatter(x=x, 
+                       y=y, 
+                       textfont = dict(size=new_freq_list,
+                                       color=color_list),
+                       hoverinfo='text',
+                       hovertext=['{0}{1}'.format(w, f) for w, f in zip(word_list, freq_list)],
+                       mode='text',  
+                       text=word_list
+                      )
+    
+    layout = go.Layout({'xaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False},
+                        'yaxis': {'showgrid': False, 'showticklabels': False, 'zeroline': False}})
+    
+    fig = go.Figure(data=[trace], layout=layout)
+    print(type(fig))
+    return render_template(fig)
 
 
 if __name__ == '__main__':
