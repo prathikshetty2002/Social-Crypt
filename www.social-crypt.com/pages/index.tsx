@@ -1,13 +1,12 @@
 import Header from "@/components/Header";
+import { handleSubmit } from "@/utils";
 import Head from "next/head";
 import Image from "next/image";
+import { NextRouter, useRouter } from "next/router";
 import { FormEvent } from "react";
 
 export default function Home() {
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log(e.currentTarget["URL"].value);
-  };
+  const router= useRouter()
 
   return (
     <>
@@ -34,9 +33,9 @@ export default function Home() {
           </div>
           <div className="lg:w-2/5">
             <h1 className="text-3xl lg:text-5xl font-bold">Crypt Check an Article!</h1>
-            <form className="mt-5 text-xl space-y-6" onSubmit={handleSubmit}>
+            <form className="mt-5 text-xl space-y-6" onSubmit={e => handleSubmit(e.currentTarget["URL"].value, router)}>
               <span>
-                <label>Enter Article URL</label>
+                <label htmlFor="URl" >Enter Article URL</label>
                 <input
                   type="text"
                   name="URL"
@@ -51,7 +50,7 @@ export default function Home() {
             hover:ring-4 ring-blue-400 ring-opacity-40
             active:scale-90 transition-all"
               >
-                Submit
+                Analyze
               </button>
             </form>
           </div>
