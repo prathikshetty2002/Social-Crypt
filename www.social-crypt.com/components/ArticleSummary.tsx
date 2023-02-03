@@ -2,7 +2,7 @@ import { useQuery } from "react-query";
 
 const ArticleSummary: React.FC<{ url: string }> = ({ url }) => {
   const { data, isLoading, isError } = useQuery("article summary", async () => {
-    const res = await fetch("http://localhost:5000/summary").then((res) =>
+    const res = await fetch(`http://localhost:5000/summary?url=${encodeURIComponent(url)}`).then((res) =>
       res.json()
     );
     console.log(res);
@@ -15,7 +15,7 @@ const ArticleSummary: React.FC<{ url: string }> = ({ url }) => {
       {isLoading && <div>Loading...</div>}
       {!isLoading && !isError && data && (
         <div>
-          <p className="text-sm leading-relaxed mt-1 text-slate-800">{data.result}</p>
+          <p className="text-sm leading-relaxed mt-1 text-slate-800">{data?.result}</p>
         </div>
       )}
     </div>

@@ -10,9 +10,16 @@ import dynamic from "next/dynamic";
 import ArticleSummary from "@/components/ArticleSummary";
 import ArticleSentiment from "@/components/ArticleSentiment";
 import TwitterAnalysis from "@/components/TwitterAnalysis";
-const WordCloud = dynamic(import("@/components/WordCloud"), {
-  ssr: false,
-});
+import TwitterSentiment from "@/components/TwitterSentiment";
+import PropogandaClassification from "@/components/PropogandaClassification";
+import WordCloud from "@/components/WordCloud";
+import AuthenticityCheck from "@/components/AuthenticityCheck";
+// const WordCloud = dynamic(import("@/components/WordCloud"), {
+//   ssr: false,
+// });
+// const ArticleSentiment = dynamic(import("@/components/ArticleSentiment"), {
+//   ssr: false,
+// });
 
 const Analyze: NextPage = () => {
   const router = useRouter();
@@ -62,30 +69,46 @@ const Analyze: NextPage = () => {
         {article && (
           <article>
             <section className="py-5 lg:py-10 border-t-gray-300 border-t-2">
-              <h1 className="text-3xl lg:text-5xl font-bold mb-2 lg:mb-6">Indentification 🪪</h1>
+              <h1 className="text-3xl lg:text-5xl font-bold mb-2 lg:mb-6">
+                Indentification 🪪
+              </h1>
               <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-                <div className="lg:w-2/6" >
+                <div className="lg:w-2/6">
                   <ArticleSummary url={article as string} />
                 </div>
-                <div className="lg:w-2/6" >
+                <div className="lg:w-2/6">
                   <WordCloud url={article as string} />
                 </div>
-                <div className="lg:w-2/6" >
+                <div className="lg:w-2/6">
                   <ArticleSentiment url={article as string} />
                 </div>
               </div>
             </section>
             <section className="py-5 lg:py-10 border-t-gray-300 border-t-2">
-              <h1 className="text-3xl lg:text-5xl font-bold mb-2 lg:mb-6">Assessment 🧑‍🏭</h1>
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-                <div className="lg:w-2/6" >
+              <h1 className="text-3xl lg:text-5xl font-bold mb-2 lg:mb-6">
+                Assessment 🧑‍🏭
+              </h1>
+              <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 flex-wrap justify-between">
+                <div className="lg:w-[30%]">
                   <TwitterAnalysis url={article as string} />
                 </div>
-                <div className="lg:w-2/6" >
-                  <WordCloud url={article as string} />
+                <div className="lg:w-[30%]">
+                  <TwitterSentiment url={article as string} />
                 </div>
-                <div className="lg:w-2/6" >
-                  <ArticleSentiment url={article as string} />
+                <div className="lg:w-[30%]">
+                  <PropogandaClassification url={article as string} />
+                </div>
+                <div className="lg:w-[30%]">
+                  <AuthenticityCheck url={article as string} />
+                </div>
+                {/* <div className="lg:w-[30%]">
+                <iframe src='https://flo.uri.sh/visualisation/12633410/embed' title='Interactive or visual content' className='flourish-embed-iframe' frameBorder='0' scrolling='no' style={{'width':'100%','height':'600px'}} sandbox='allow-same-origin allow-forms allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation'><div style={{'width':'100%!',marginTop:'4px!important',textAlign:'right'}}><a className='flourish-credit' href='https://public.flourish.studio/visualisation/12633410/?utm_source=embed&utm_campaign=visualisation/12633410' target='_top' style={{'textDecoration':'none!important'}}><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style={{'width':'105px';'height':'16px';'border':'none';'margin':'0'}}></img> </a></div></iframe>
+                </div> */}
+                {/* <div className="lg:w-[100%] h-44">
+                <div class="flourish-embed flourish-network h-44 w-[100%] " data-src="visualisation/12633410"><script src="https://public.flourish.studio/resources/embed.js"></script></div>
+                </div> */}
+                <div className="lg:w-[30%] h-44">
+                <iframe className="max-w-xs mx-auto relative " src="https://public.flourish.studio/visualisation/12633410/" style={{"border":"0px #ffffff none"}} name="myiFrame" scrolling="no" frameBorder="1" marginHeight="0px" marginwidth="0px" height="400px" width="600px" allowfullscreen></iframe>
                 </div>
               </div>
             </section>

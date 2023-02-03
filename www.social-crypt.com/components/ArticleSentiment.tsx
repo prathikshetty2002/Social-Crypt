@@ -1,19 +1,49 @@
+import { Data } from "plotly.js";
+import Plot from "react-plotly.js";
 import { useQuery } from "react-query";
+import { Doughnut } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Colors,
+} from "chart.js";
 
-const ArticleSentiment: React.FC<{url: string}> = ({url}) => {
+ChartJS.register(ArcElement, Tooltip, Legend, Colors);
 
-    const { data, isLoading, isError } = useQuery("article sentiment", async () => {
-        const res = await fetch("http://localhost:5000/sentiment").then((res) =>res.json())
-        console.log(res);
-        return res
-      });
+const ArticleSentiment: React.FC<{ url: string }> = ({ url }) => {
+  const { data, isLoading, isError } = useQuery(
+    "article sentiment",
+    async () => {
+      const res = await fetch(
+        `http://localhost:5000/article-sentiment?url=${url}`
+      ).then((res) => res.json());
+      console.log(res.values);
+      console.log(res.labels);
+      return res;
+    }
+  );
 
-    return (
-        <div className="bg-lime-300 p-6 rounded-2xl" >
-            <h2 className="text-2xl font-medium" >Article Sentiment Analysis</h2>
-            <p className="text-sm leading-relaxed mt-1 " >Lorem ipsum dolor sit, amet consectetur adipisicing elit. Cum culpa perspiciatis iusto delectus, quae magni magnam, quam commodi explicabo minima reprehenderit repudiandae ea vitae eligendi, enim beatae tenetur velit? Quibusdam, maiores iure corporis accusamus est autem dignissimos dolorem, in ut natus illum deleniti eligendi incidunt, ab cupiditate cum quidem. Dolore.</p>
-        </div>
-    )
-}
+  return (
+    <div className="bg-lime-300 p-6 rounded-2xl">
+      <h2 className="text-2xl font-medium mb-4">Article Sentiment Analysis</h2>
+      {!isLoading && !isError && (
+        <Doughnut
+          data={{
+            labels: data.labels,
+            datasets: [
+              {
+                label: "Article Sentiment",
+                data: data?.values,
+                hoverOffset: 4,
+              },
+            ],
+          }}
+        />
+      )}
+    </div>
+  );
+};
 
-export default ArticleSentiment
+export default ArticleSentiment;
