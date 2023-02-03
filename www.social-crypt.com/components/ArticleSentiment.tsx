@@ -28,7 +28,7 @@ const ArticleSentiment: React.FC<{ url: string }> = ({ url }) => {
   return (
     <div className="bg-lime-300 p-6 rounded-2xl">
       <h2 className="text-2xl font-medium mb-4">Article Sentiment Analysis</h2>
-      {!isLoading && !isError && (
+      {!isLoading && !isError && data && (
         <Doughnut
           data={{
             labels: data.labels,

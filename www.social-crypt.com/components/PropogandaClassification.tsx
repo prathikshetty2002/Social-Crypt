@@ -11,17 +11,15 @@ const PropogandaClassification: React.FC<{ url: string }> = ({ url }) => {
   const { data, isLoading, isError } = useQuery(
     "propoganda classification",
     async () => {
-      const res = await fetch(`http://localhost:5000/propaganda?url=${url}`).then(
+      const res = await fetch(`http://localhost:5000/propaganda?url=${encodeURIComponent(url)}`).then(
         (res) => res.json()
       );
-      console.log(res.values);
-      console.log(res.labels);
       return res;
     }
   );
 
   return (
-    <div className="bg-red-400 p-6 rounded-2xl">
+    <div className="bg-orange-200 p-6 rounded-2xl">
       <h2 className="text-2xl font-medium mb-4">Propoganda Classificaiton</h2>
       {!isLoading && !isError && (
         <Bar

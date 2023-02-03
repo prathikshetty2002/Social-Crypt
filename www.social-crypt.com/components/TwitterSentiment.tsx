@@ -23,17 +23,7 @@ const TwitterSentiment: React.FC<{ url: string }> = ({ url }) => {
   return (
     <div className="bg-violet-400 p-6 rounded-2xl">
       <h2 className="text-2xl font-medium mb-4">Tweet Sentiment Analysis</h2>
-      {/* {!isLoading && !isError && (
-        <Plot data={[{
-            values: data.values,
-            labels: data.labels,
-            type: "pie",
-        }]} layout={{
-            height: 400,
-            width: 400,
-        }} />
-      )} */}
-      {!isLoading && !isError && (
+      {!isLoading && !isError && data && (
         <PolarArea
             data={{
                 labels: data?.labels,

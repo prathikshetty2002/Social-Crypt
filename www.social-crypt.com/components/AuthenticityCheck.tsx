@@ -10,7 +10,7 @@ const AuthenticityCheck: React.FC<{ url: string }> = ({ url }) => {
   });
 
   return (
-    <div className="bg-orange-300 p-6 rounded-2xl">
+    <div className={`${data?.authentic ? "bg-green-300" : "bg-red-300" } bg-orange-300 p-6 rounded-2xl`}>
       <h2 className="text-2xl font-medium">Authenticity Check</h2>
       {isLoading && <div>Loading...</div>}
       {!isLoading && !isError && data && (

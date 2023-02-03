@@ -16,7 +16,7 @@ const TwitterAnalysis: React.FC<{ url: string }> = ({ url }) => {
 
   return (
     <div className="bg-teal-300 p-6 rounded-2xl">
-      <h2 className="text-2xl font-medium">Twitter Anaylysis</h2>
+      <h2 className="text-2xl font-medium">Twitter Analysis</h2>
       {data && (
         <>
           <div className="mt-4 flex flex-wrap justify-around gap-2">
@@ -33,6 +33,8 @@ const TwitterAnalysis: React.FC<{ url: string }> = ({ url }) => {
               <p className="text-xl font-bold ">{data?.result.likecount}</p>
             </span>
           </div>
+      <h2 className="text-xl font-medium mt-6">Hashtags used</h2>
+
           <div className="flex flex-wrap mt-4 gap-4">
             {data.result.hashtags.map((h: string) => (
               <span
