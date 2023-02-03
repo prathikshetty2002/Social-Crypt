@@ -18,6 +18,9 @@ import base64
 import pandas as pd
 # from flask import send_file
 from flask import send_file
+import datetime
+import plotly.express as px
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 app = Flask(__name__)
@@ -28,7 +31,7 @@ queryString = None
 # print(type(twitterData))
 
 @app.route('/twitter')
-def index():
+def twitter():
     query = request.args['query']
     retweet = 0
     likecount = 0
@@ -37,18 +40,22 @@ def index():
     global twitterData
     global queryString
     print("Url: Twitter, data: ", twitterData)
-    if twitterData is None:
-        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
-        queryString = query
-    else:
-        if queryString != query:
-            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
-            queryString = query
-        else:
-            print("not scraping again")
+    print("Url: Twitter, query: ", queryString)
+    # if twitterData is None:
+    #     twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+    #     queryString = query
+    # else:
+    #     if queryString != query:
+    #         twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+    #         queryString = query
+    #     else:
+    #         print(vars(twitterData)) 
+    #         print("not scraping again")
+    twitterData = snstwitter.TwitterSearchScraper(query).get_items()
         
     for tweet in twitterData: 
-        # print(vars(tweet)) 
+        print("looping through tweets")
+        print(vars(tweet)) 
         likecount += tweet.likeCount
         retweet += tweet.retweetCount + tweet.quoteCount
         if(tweet.hashtags != None):
@@ -60,7 +67,7 @@ def index():
         if(i==200):
             break
         
-    tweets = [{"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}]
+    tweets = {"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}
     
     return jsonify({'result':tweets})
 
@@ -110,13 +117,14 @@ def sentiment():
     global twitterData
     global queryString
     print("Url: Sentiment, data: ", twitterData)
-    if twitterData is None:
-        twitterData = snstwitter.TwitterSearchScraper(query).get_items()
-        queryString = query
-    else:
-        if queryString != query:
-            twitterData = snstwitter.TwitterSearchScraper(query).get_items()
-            queryString = query
+    # if twitterData is None:
+    #     twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+    #     queryString = query
+    # else:
+    #     if queryString != query:
+    #         twitterData = snstwitter.TwitterSearchScraper(query).get_items()
+    #         queryString = query
+    twitterData = snstwitter.TwitterSearchScraper(query).get_items()
         
     for tweet in twitterData: 
         if tweet.lang=="en":
@@ -136,10 +144,11 @@ def sentiment():
                 negative+=1
             else :
                 neutral+=1
-    senti=[positive, negative, neutral]
-            
+    senti={"positive":positive, "negative":negative, "neutral":neutral}
+    labels = list(senti.keys())
+    values = list(senti.values())
         
-    return jsonify({"result":senti})
+    return {"labels":labels, "values":values}
             
 @app.route('/sentiment_article')
 def sentiment_article():
@@ -163,16 +172,18 @@ def sentiment_article():
 
 
 
-@app.route('/hate_speech')
-def hate_speech():
-    url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
+@app.route('/article-sentiment')
+def articleSentiment():
+    url = request.args['url']
+
+    # url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
     goose = Goose()
     articles = goose.extract(url)
     sentence = articles.cleaned_text[0:500]
     print(sentence)
     output=query_hate({
 	"inputs": str(sentence)})
-    print(output[0][0])
+    # print(output[0][0])
     result = {}
     for data in output[0]:
         if data['label'] == "LABEL_0":
@@ -183,22 +194,37 @@ def hate_speech():
             result["OFFENSIVE"] = data['score']
         elif data['label'] == "LABEL_3":
             result["VIOLENT"] = data['score']
+    labels = list(result.keys())
+    values = list(result.values())
+
+    # # Use `hole` to create a donut-like pie chart
+    # fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5)])
+    # # fig.show()
+    # graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    # print(graphJSON)
+    # print(type(fig))
+    # return graphJSON
+    return jsonify({"labels": labels, "values": values})
             
-    return jsonify(result)
+
 
 
 
 
 @app.route('/summary')
 def summary():
-    url = request.args['url']
-    goose = Goose()
-    articles = goose.extract(url)
-    output = query({
-	"inputs":  articles.cleaned_text
-    })
-    print(output)
-    
+    try:
+
+        url = request.args['url']
+        goose = Goose()
+        articles = goose.extract(url)
+        output = query({
+        "inputs":  articles.cleaned_text
+        })
+        print(output)
+    except:
+        return "Please put the relevant text article"
+
     return jsonify({"result": output[0]['summary_text']})
 
 @app.route('/cloud2')
@@ -247,8 +273,9 @@ def propaganda():
 	"inputs":  articles.cleaned_text[0:600]
     })
     
-    num = str(output[0][0]['score'])
-    return num
+    yes = output[0][0]['score']
+    no = 1 - yes
+    return jsonify({"yes": yes, "no": no})
 
 	
 
@@ -314,17 +341,44 @@ def plotly_wordcloud():
 
 @app.route('/authenticity')
 def auth():
-    name = request.args['name']
+    url = request.args['url']
     lis = []
     df = pd.read_csv('blacklist.csv')
     for i in range(len(df)):
         lis.append(df.loc[i, "MBFC"])
-    
-    for l in lis:
-        if(name.__contains__(l)):
-            return {"result":True}
 
-    return { "result": False }
+    for l in lis:
+        if(url.__contains__(l)):
+            return {"authentic":False}
+
+    return { "authentic": True }
+
+@app.route('/bot-activity')
+def botActivity():
+    url = request.args['url']
+    i=0
+    usernames = []
+    time = []
+    finalusername = []
+    for tweet in snstwitter.TwitterSearchScraper(url).get_items():
+        usernames.append(tweet.user.username)
+        time.append(tweet.date)
+        if(i==150):
+            break
+        i+=1
+
+    for i in range(len(time)-1):
+        a = time[i]
+        b = time[i+1]
+        c = a-b
+        flag = False
+        if(c.seconds <= 60):            
+            finalusername.append(usernames[i+1])
+
+    
+    if(len(finalusername) > 10):
+        flag = True
+    return jsonify({"finalusername":finalusername,"flag":flag})
 
 
 if __name__ == '__main__':
