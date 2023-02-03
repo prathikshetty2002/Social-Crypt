@@ -18,6 +18,7 @@ import base64
 import pandas as pd
 # from flask import send_file
 from flask import send_file
+import datetime
 import plotly.express as px
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
@@ -212,14 +213,18 @@ def articleSentiment():
 
 @app.route('/summary')
 def summary():
-    url = request.args['url']
-    goose = Goose()
-    articles = goose.extract(url)
-    output = query({
-	"inputs":  articles.cleaned_text
-    })
-    print(output)
-    
+    try:
+
+        url = request.args['url']
+        goose = Goose()
+        articles = goose.extract(url)
+        output = query({
+        "inputs":  articles.cleaned_text
+        })
+        print(output)
+    except:
+        return "Please put the relevant text article"
+
     return jsonify({"result": output[0]['summary_text']})
 
 @app.route('/cloud2')
@@ -341,12 +346,40 @@ def auth():
     df = pd.read_csv('blacklist.csv')
     for i in range(len(df)):
         lis.append(df.loc[i, "MBFC"])
-    
+
     for l in lis:
         if(url.__contains__(l)):
             return {"authentic":False}
 
     return { "authentic": True }
+
+@app.route('/bot-activity')
+def botActivity():
+    url = request.args['url']
+    i=0
+    usernames = []
+    time = []
+    finalusername = []
+    for tweet in snstwitter.TwitterSearchScraper(url).get_items():
+        usernames.append(tweet.user.username)
+        time.append(tweet.date)
+        if(i==150):
+            break
+        i+=1
+
+    for i in range(len(time)-1):
+        a = time[i]
+        b = time[i+1]
+        c = a-b
+        flag = False
+        if(c.seconds <= 60):            
+            finalusername.append(usernames[i+1])
+
+    
+    if(len(finalusername) > 10):
+        flag = True
+    return jsonify({"finalusername":finalusername,"flag":flag})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
