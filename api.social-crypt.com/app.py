@@ -203,14 +203,18 @@ def articleSentiment():
 
 @app.route('/summary')
 def summary():
-    url = request.args['url']
-    goose = Goose()
-    articles = goose.extract(url)
-    output = query({
-	"inputs":  articles.cleaned_text
-    })
-    print(output)
-    
+    try:
+
+        url = request.args['url']
+        goose = Goose()
+        articles = goose.extract(url)
+        output = query({
+        "inputs":  articles.cleaned_text
+        })
+        print(output)
+    except:
+        return "Please put the relevant text article"
+
     return jsonify({"result": output[0]['summary_text']})
 
 @app.route('/cloud2')
