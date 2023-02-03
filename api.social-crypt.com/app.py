@@ -18,6 +18,7 @@ import base64
 import pandas as pd
 # from flask import send_file
 from flask import send_file
+import datetime
 import plotly.express as px
 
 
@@ -334,6 +335,7 @@ def auth():
     for l in lis:
         if(name.__contains__(l)):
             return {"result":True}
+
     return { "result": False }
 
 @app.route('/hashtags')
@@ -341,17 +343,26 @@ def hashtags():
     i=0
     usernames = []
     time = []
-    for tweet in snstwitter.TwitterHashtagScraper("russia").get_items():
+    finalusername = []
+    for tweet in snstwitter.TwitterSearchScraper("https://www.aajtak.in/").get_items():
         usernames.append(tweet.user.username)
         time.append(tweet.date)
-        if(i==100):
+        if(i==150):
             break
         i+=1
-    data = {"usernames":usernames,"time":time}
-    df = pd.DataFrame(data)
-    print(df.head())
-    return "helo"
 
+    for i in range(len(time)-1):
+        a = time[i]
+        b = time[i+1]
+        c = a-b
+        flag = False
+        if(c.seconds <= 60):            
+            finalusername.append(usernames[i+1])
+
+    if(len(finalusername) != 0):
+        flag = True
+    print(len(finalusername))
+    return jsonify({"finalusername":finalusername,"flag":flag})
 
 
 if __name__ == '__main__':
