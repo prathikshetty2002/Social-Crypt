@@ -56,6 +56,8 @@ Social Crypt is the solution you need to remain informed and make informed decis
 
 📱 **Social Media Presence**: Explores the presence of the same information present on the social media like twitter and other metadata associated with it like like, share, top user retweeting it the most, etc. Also, will be exploring the timeline of the same article shared on social media.
 
+🌐 **Real-Time Twitter Analytics**: Url or the string provided for the news article/blog is identified on the social media and the activity performed by different user and the sentiment of the people tweeting with the same link is provided by social crypt. 
+
 #️⃣ **Associated Presence**: To understand the associated hashtags or other information with the blog and also the top users sharing the content.
 
 ⚙️**Easy-to-Use Interface**: User-friendly interface, making it accessible and intuitive for users of all levels. Only putting the URL of the blog and the application will generate the whole analytical report.
