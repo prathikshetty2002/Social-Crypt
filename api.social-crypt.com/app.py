@@ -319,12 +319,28 @@ def auth():
     df = pd.read_csv('blacklist.csv')
     for i in range(len(df)):
         lis.append(df.loc[i, "MBFC"])
-    
+
     for l in lis:
         if(name.__contains__(l)):
             return {"result":True}
-
     return { "result": False }
+
+@app.route('/hashtags')
+def hashtags():
+    i=0
+    usernames = []
+    time = []
+    for tweet in snstwitter.TwitterHashtagScraper("russia").get_items():
+        usernames.append(tweet.user.username)
+        time.append(tweet.date)
+        if(i==100):
+            break
+        i+=1
+    data = {"usernames":usernames,"time":time}
+    df = pd.DataFrame(data)
+    print(df.head())
+    return "helo"
+
 
 
 if __name__ == '__main__':
