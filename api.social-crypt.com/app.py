@@ -363,9 +363,9 @@ def hashtags():
         if(c.seconds <= 60):            
             finalusername.append(usernames[i+1])
 
-    if(len(finalusername) != 0):
+    
+    if(len(finalusername) > 10):
         flag = True
-    print(len(finalusername))
     return jsonify({"finalusername":finalusername,"flag":flag})
 
 
