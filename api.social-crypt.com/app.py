@@ -18,6 +18,7 @@ import base64
 import pandas as pd
 # from flask import send_file
 from flask import send_file
+import plotly.express as px
 
 
 app = Flask(__name__)
@@ -163,8 +164,8 @@ def sentiment_article():
 
 
 
-@app.route('/hate_speech')
-def hate_speech():
+@app.route('/article-sentiment')
+def articleSentiment():
     url = 'https://blogs.jayeshvp24.dev/dive-into-web-design'
     goose = Goose()
     articles = goose.extract(url)
@@ -183,8 +184,18 @@ def hate_speech():
             result["OFFENSIVE"] = data['score']
         elif data['label'] == "LABEL_3":
             result["VIOLENT"] = data['score']
+    labels = list(result.keys())
+    values = list(result.values())
+
+    # Use `hole` to create a donut-like pie chart
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5)])
+    # fig.show()
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    print(graphJSON)
+    print(type(fig))
+    return graphJSON
             
-    return jsonify(result)
+
 
 
 
