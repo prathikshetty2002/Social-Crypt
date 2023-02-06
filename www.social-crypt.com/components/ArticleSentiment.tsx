@@ -9,11 +9,12 @@ import {
   Legend,
   Colors,
 } from "chart.js";
+import { useEffect } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend, Colors);
 
 const ArticleSentiment: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery(
+  const { data, isLoading, isError, refetch } = useQuery(
     "article sentiment",
     async () => {
       const res = await fetch(
@@ -24,6 +25,7 @@ const ArticleSentiment: React.FC<{ url: string }> = ({ url }) => {
       return res;
     }
   );
+  useEffect(() => {refetch()},[url])
 
   return (
     <div className="bg-lime-300 p-6 rounded-2xl">

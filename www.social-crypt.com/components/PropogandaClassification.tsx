@@ -3,12 +3,13 @@ import Plot from "react-plotly.js";
 import { useQuery } from "react-query";
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, Tooltip, Legend, Colors, CategoryScale, LinearScale } from "chart.js";
+import { useEffect } from "react";
 
 ChartJS.register(BarElement, Tooltip, Legend, Colors, CategoryScale, LinearScale);
 
 
 const PropogandaClassification: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery(
+  const { data, isLoading, isError, refetch } = useQuery(
     "propoganda classification",
     async () => {
       const res = await fetch(`http://localhost:5000/propaganda?url=${encodeURIComponent(url)}`).then(
@@ -17,6 +18,7 @@ const PropogandaClassification: React.FC<{ url: string }> = ({ url }) => {
       return res;
     }
   );
+  useEffect(() => {refetch()},[url])
 
   return (
     <div className="bg-orange-200 p-6 rounded-2xl">

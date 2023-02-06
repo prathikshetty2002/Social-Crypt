@@ -4,11 +4,12 @@ import Plot from "react-plotly.js";
 import { Data } from "plotly.js";
 
 const WordCloud: React.FC<{url: string}> = ({url}) => {
-  const { data, isLoading, isError, error } = useQuery("word cloud", async () => {
+  const { data, isLoading, isError, error, refetch } = useQuery("word cloud", async () => {
     const res = await fetch(`http://localhost:5000/cloud2?url=${encodeURIComponent(url)}`).then((res) =>res.blob())
     console.log(res);
     return res
   });
+  useEffect(() => {refetch()},[url])
 
   useEffect(() => {
     console.log("word cloud : ", error);
