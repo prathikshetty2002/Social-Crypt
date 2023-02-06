@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { useQuery } from "react-query";
 
 const TwitterAnalysis: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery(
+  const { data, isLoading, isError, refetch } = useQuery(
     "twitter analysis",
     async () => {
       const res = await fetch(
@@ -11,6 +12,7 @@ const TwitterAnalysis: React.FC<{ url: string }> = ({ url }) => {
       return res;
     }
   );
+  useEffect(() => {refetch()},[url])
 
   if (isLoading) return <div>Loading...</div>;
 

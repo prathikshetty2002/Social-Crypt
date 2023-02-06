@@ -20,10 +20,10 @@ const Conclusion: React.FC<{ url: string }> = ({ url }) => {
     }
   );
   const { data: bot, isLoading: botisLoading, isError: botisError } = useQuery(
-    "authenticity check",
+    "bot activity",
     async () => {
       const res = await fetch(
-        `http://localhost:5000/authenticity?url=${encodeURIComponent(url)}`
+        `http://localhost:5000/bot-activity?url=${encodeURIComponent(url)}`
       ).then((res) => res.json());
       return res;
     }

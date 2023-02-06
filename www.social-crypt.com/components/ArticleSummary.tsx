@@ -1,13 +1,15 @@
+import { useEffect } from "react";
 import { useQuery } from "react-query";
 
 const ArticleSummary: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery("article summary", async () => {
+  const { data, isLoading, isError, refetch } = useQuery("article summary", async () => {
     const res = await fetch(`http://localhost:5000/summary?url=${encodeURIComponent(url)}`).then((res) =>
       res.json()
     );
     console.log(res);
     return res;
   });
+  useEffect(() => {refetch()},[url])
 
   return (
     <div className="bg-orange-300 p-6 rounded-2xl">

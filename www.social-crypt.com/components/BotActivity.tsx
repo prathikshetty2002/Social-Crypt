@@ -2,9 +2,10 @@ import { Data } from "plotly.js";
 import Plot from "react-plotly.js";
 import { useQuery } from "react-query";
 import { Doughnut, PolarArea } from "react-chartjs-2";
+import { useEffect } from "react";
 
 const BotActivity: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery("bot activity", async () => {
+  const { data, isLoading, isError,refetch } = useQuery("bot activity", async () => {
     const res = await fetch(
       `http://localhost:5000/bot-activity?url=${url}`
     ).then((res) => res.json());
@@ -12,6 +13,10 @@ const BotActivity: React.FC<{ url: string }> = ({ url }) => {
     console.log(res.labels);
     return res;
   });
+  useEffect(() => {refetch()},[url])
+
+
+  useEffect(() => {console.log("data of bot acivitiy: ", data)},[data])
 
   return (
     <div className="bg-violet-400 p-6 rounded-2xl">
@@ -27,17 +32,20 @@ const BotActivity: React.FC<{ url: string }> = ({ url }) => {
               </p>
               <span>
                 <p>These users maybe bots</p>
+                <span className="flex flex-wrap gap-2" >
+
                 {data.bots.map((b: string) => (
-                  <a
+                    <a
                     target="_blank"
                     rel="noopener noreferrer"
                     key={b}
                     href={`https://twitter.com/${b}`}
                     className="bg-blue-200 hover:bg-blue-500 px-4 py-1 rounded-full w-fit"
-                  >
+                    >
                     {b}
                   </a>
                 ))}
+                </span>
               </span>
             </span>
           ) : (
@@ -48,6 +56,8 @@ const BotActivity: React.FC<{ url: string }> = ({ url }) => {
               {(data.bots as string[]).length > 0 && (
                 <span>
                   <p>These users have Highest Activity on this URL</p>
+                <span className="flex flex-wrap gap-2" >
+                  
                   {data.bots.map((b: string) => (
                     <a
                       target="_blank"
@@ -59,6 +69,7 @@ const BotActivity: React.FC<{ url: string }> = ({ url }) => {
                       {b}
                     </a>
                   ))}
+                  </span>
                 </span>
               )}
             </span>

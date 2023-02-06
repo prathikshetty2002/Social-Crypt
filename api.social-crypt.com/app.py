@@ -30,6 +30,10 @@ queryString = None
 
 # print(type(twitterData))
 
+load_dotenv()
+
+print(os.getenv("HUGGINGFACE_API"))
+
 @app.route('/twitter')
 def twitter():
     query = request.args['query']
@@ -83,7 +87,7 @@ def xyz():
 
 
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer " +  os.getenv('HUGGINGFACE_API') }
 API_URL_PROP = "https://api-inference.huggingface.co/models/valurank/distilroberta-propaganda-2class"
 API_URL_HATE = "https://api-inference.huggingface.co/models/IMSyPP/hate_speech_en"
 
@@ -367,18 +371,18 @@ def botActivity():
             break
         i+=1
 
+    flag = False
     for i in range(len(time)-1):
         a = time[i]
         b = time[i+1]
         c = a-b
-        flag = False
         if(c.seconds <= 60):            
             finalusername.append(usernames[i+1])
 
-    
-    if(len(finalusername) > 10):
+    print("username: ", finalusername)
+    if(len(finalusername) > 3):
         flag = True
-    return jsonify({"finalusername":finalusername,"flag":flag})
+    return jsonify({"bots":list(set(finalusername)),"flag":flag})
 
 
 if __name__ == '__main__':

@@ -1,13 +1,15 @@
+import { useEffect } from "react";
 import { useQuery } from "react-query";
 
 const AuthenticityCheck: React.FC<{ url: string }> = ({ url }) => {
-  const { data, isLoading, isError } = useQuery("authenticity check", async () => {
+  const { data, isLoading, isError, refetch } = useQuery("authenticity check", async () => {
     const res = await fetch(`http://localhost:5000/authenticity?url=${encodeURIComponent(url)}`).then((res) =>
       res.json()
     );
     console.log(res);
     return res;
   });
+  useEffect(() => {refetch()},[url])
 
   return (
     <div className={`${data?.authentic ? "bg-green-300" : "bg-red-300" } bg-orange-300 p-6 rounded-2xl`}>
