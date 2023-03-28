@@ -1,7 +1,7 @@
 from io import BytesIO
 from flask import Flask, jsonify
 import os
-import tweepy
+# import tweepy
 from dotenv import load_dotenv
 from flask import request,jsonify
 import snscrape.modules.twitter as snstwitter
