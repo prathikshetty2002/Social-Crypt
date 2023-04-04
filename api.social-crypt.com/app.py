@@ -34,6 +34,11 @@ load_dotenv()
 
 print(os.getenv("HUGGINGFACE_API"))
 
+
+@app.route('/')
+def hello_geek():
+    return '<h1>Hello from Flask & Docker</h2>'
+
 @app.route('/twitter')
 def twitter():
     query = request.args['query']
