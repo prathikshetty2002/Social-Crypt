@@ -72,7 +72,7 @@ def twitter():
             break
         
     tweets = {"likecount":likecount,"retweet":retweet,"hashtags":list(hashtags),"count":i}
-    
+    print(tweets)
     return jsonify({'result':tweets})
 
 
@@ -240,11 +240,12 @@ def plotly_wordcloud2():
     wordcloud = WordCloud(width=1280, height=853, margin=0,
                       colormap='Blues').generate(text)
     wordcloud.to_file("./wordcloud.png")
-    # plt.imshow(wordcloud, interpolation='bilinear')
-    # plt.axis('off')
-    # plt.margins(x=0, y=0)
-    # # plt.show()
-    # # img = BytesIO()
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.margins(x=0, y=0)
+    
+    # plt.show()
+    # img = BytesIO()
 
     # plt.savefig("./wordcloud.png", format='png')
     # plt.imsave("./wordcloud.png", format='png')
@@ -283,18 +284,18 @@ def propaganda():
 
 	
 
-@app.route('/cloud')
-def plotly_wordcloud():
-    url = request.args['url']
-    goose = Goose()
-    articles = goose.extract(url)
-    text = query({
-	"inputs":  articles.cleaned_text
-    })
-    wc = WordCloud(stopwords = set(STOPWORDS),
-                   max_words = 200,
-                   max_font_size = 100)
-    wc.generate(text[0]['summary_text'])
+# @app.route('/cloud')
+# def plotly_wordcloud():
+#     url = request.args['url']
+#     goose = Goose()
+#     articles = goose.extract(url)
+#     text = query({
+# 	"inputs":  articles.cleaned_text
+#     })
+#     wc = WordCloud(stopwords = set(STOPWORDS),
+#                    max_words = 200,
+#                    max_font_size = 100)
+#     wc.generate(text[0]['summary_text'])
     
 #     word_list=[]
 #     freq_list=[]
