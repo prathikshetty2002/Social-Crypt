@@ -21,7 +21,14 @@ from flask import send_file
 import datetime
 import plotly.express as px
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import logging
+import sys
+from llama_index import GPTVectorStoreIndex, TwitterTweetReader
+import os
+import llama_index
+from llama_index import GPTVectorStoreIndex, SimpleDirectoryReader
 
+os.environ['OPENAI_API_KEY']='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'
 
 app = Flask(__name__)
 
@@ -287,7 +294,29 @@ def propaganda():
     no = 1 - yes
     return jsonify({"yes": yes, "no": no})
 
-	
+
+
+@app.route("/chat", methods=["GET"])
+def chat():
+    # Get the query from the request body.
+    query = request.args['url']
+    # create an app in https://developer.twitter.com/en/apps
+    BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANNclgEAAAAAlJPPb3HkBact%2FMOfIMWYYKFqW%2F0%3D02pe3oZf24bq0Eo6qpuHxzdSLYkAuoTcVovlbCviqqDRpVVXCi"
+    # create reader, specify twitter handles
+    reader = TwitterTweetReader(BEARER_TOKEN)
+    documents = reader.load_data(["ANI"])
+    # Create a new instance of the llama chatbot agent.
+    agent = llama_index.GPTVectorStoreIndex.from_documents(documents)
+    chat_engine = agent.as_chat_engine(verbose=True)
+
+    # Get the response from the llama chatbot agent.
+    response = chat_engine.chat(query)
+
+    # Return the response as JSON.
+    return jsonify({"response": response})
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 # @app.route('/cloud')
 # def plotly_wordcloud():
