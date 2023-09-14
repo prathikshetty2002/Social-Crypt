@@ -392,7 +392,6 @@ def botActivity():
     if(len(finalusername) > 3):
         flag = True
     return jsonify({"bots":list(set(finalusername)),"flag":flag})
-
-
+#baseline model
 if __name__ == '__main__':
     app.run(debug=True)
