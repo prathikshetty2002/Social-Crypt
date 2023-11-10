@@ -26,12 +26,8 @@ jobs:
     - name: Get changed Python files
       id: files
       run: |
-        base_sha=$(jq -r ".pull_request.base.sha // .before" $GITHUB_EVENT_PATH)
-        head_sha=$(jq -r ".pull_request.head.sha // .after" $GITHUB_EVENT_PATH)
-        if [ -z "$base_sha" ] || [ -z "$head_sha" ]; then
-          echo "Base or head commit SHA missing"
-          exit 0
-        fi
+        base_sha=${{ github.event.before }}
+        head_sha=${{ github.sha }}
         files=$(git diff --name-only $base_sha $head_sha | grep '\.py$')
         if [ -z "$files" ]; then
           echo "No Python files changed"
@@ -52,4 +48,10 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const output = `Pylint Results:\n\`\`\`\n${{ steps.pylint.outputs.output }}\n\`\`\`\nPlease review the linting errors and make the necessary changes.`;
-          const issue_n
+          const issue_number = context.issue.number || context.payload.pull_request.number;
+          github.issues.createComment({
+            issue_number: issue_number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
