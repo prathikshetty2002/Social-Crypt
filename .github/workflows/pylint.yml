@@ -24,27 +24,26 @@ jobs:
     - name: Get changed Python files
       id: files
       run: |
-        echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
-        git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$')
+        if [ -z "$files" ]; then
+          echo "No Python files changed"
+          exit 0
+        fi
+        echo "::set-output name=files::$files"
 
     - name: Run Pylint on changed files
-      if: env.CHANGED_FILES
+      id: pylint
       run: |
-        pylint_output=$(pylint ${{ env.CHANGED_FILES }}) || true
-        pylint_exit_code=$?
-        echo "PYLINT_OUTPUT<<EOF" >> $GITHUB_ENV
-        echo "$pylint_output" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-        echo "PYLINT_EXIT_CODE=$pylint_exit_code" >> $GITHUB_ENV
+        pylint_output=$(pylint ${{ steps.files.outputs.files }} 2>&1) || true
+        echo "::set-output name=output::$pylint_output"
 
     - name: Post results as a comment
-      if: env.PYLINT_EXIT_CODE != 0
+      if: steps.pylint.outputs.output
       uses: actions/github-script@v3
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
-          const output = `Pylint Results:\n\`\`\`\n${process.env.PYLINT_OUTPUT}\n\`\`\`\nPlease review the linting errors and make the necessary changes.`;
+          const output = `Pylint Results:\n\`\`\`\n${{ steps.pylint.outputs.output }}\n\`\`\`\nPlease review the linting errors and make the necessary changes.`;
           const issue_number = context.issue.number || context.payload.pull_request.number;
           github.issues.createComment({
             issue_number: issue_number,
