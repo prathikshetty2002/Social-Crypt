@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetches all history for all branches and tags
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -24,7 +26,13 @@ jobs:
     - name: Get changed Python files
       id: files
       run: |
-        files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$')
+        base_sha=$(jq -r ".pull_request.base.sha // .before" $GITHUB_EVENT_PATH)
+        head_sha=$(jq -r ".pull_request.head.sha // .after" $GITHUB_EVENT_PATH)
+        if [ -z "$base_sha" ] || [ -z "$head_sha" ]; then
+          echo "Base or head commit SHA missing"
+          exit 0
+        fi
+        files=$(git diff --name-only $base_sha $head_sha | grep '\.py$')
         if [ -z "$files" ]; then
           echo "No Python files changed"
           exit 0
@@ -44,10 +52,4 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const output = `Pylint Results:\n\`\`\`\n${{ steps.pylint.outputs.output }}\n\`\`\`\nPlease review the linting errors and make the necessary changes.`;
-          const issue_number = context.issue.number || context.payload.pull_request.number;
-          github.issues.createComment({
-            issue_number: issue_number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          });
+          const issue_n
