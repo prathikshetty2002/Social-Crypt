@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from flask import request,jsonify
 import snscrape.modules.twitter as snstwitter
+from snscrape.modules.twitter import TwitterSearchScraper, TwitterSearchScraperMode
 import requests
 from goose3 import Goose
 from wordcloud import WordCloud, STOPWORDS
@@ -67,6 +68,8 @@ def twitter():
     #     else:
     #         print(vars(twitterData)) 
     #         print("not scraping again")
+    # twitter_scraper = TwitterSearchScraper(query)
+    # twitterData = list(twitter_scraper.get_items(TwitterSearchScraperMode.TOP))
     twitterData = snstwitter.TwitterSearchScraper(query).get_items()
         
     for tweet in twitterData: 
@@ -414,7 +417,6 @@ def botActivity():
     if(len(finalusername) > 3):
         flag = True
     return jsonify({"bots":list(set(finalusername)),"flag":flag})
-
-
+#baseline model
 if __name__ == '__main__':
     app.run(debug=True)
