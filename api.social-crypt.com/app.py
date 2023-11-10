@@ -246,8 +246,8 @@ def summary():
 
     return jsonify({"result": output[0]['summary_text']})
 
-@app.route('/cloud2')
-def plotly_wordcloud2():
+@app.route('/wordcloud')
+def plotly_wordwordcloud():
     url = request.args['url']
     goose = Goose()
     articles = goose.extract(url)
@@ -391,7 +391,7 @@ def auth():
 
     return { "authentic": True }
 
-@app.route('/bot-activity-check')
+@app.route('/bot-activity')
 def botActivity():
     url = request.args['url']
     i=0
