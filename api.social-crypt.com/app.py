@@ -301,7 +301,6 @@ def chat():
     # Get the query from the request body.
     query = request.args['url']
     # create an app in https://developer.twitter.com/en/apps
-    BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANNclgEAAAAAlJPPb3HkBact%2FMOfIMWYYKFqW%2F0%3D02pe3oZf24bq0Eo6qpuHxzdSLYkAuoTcVovlbCviqqDRpVVXCi"
     # create reader, specify twitter handles
     reader = TwitterTweetReader(BEARER_TOKEN)
     documents = reader.load_data(["ANI"])
@@ -314,9 +313,6 @@ def chat():
 
     # Return the response as JSON.
     return jsonify({"response": response})
-
-if __name__ == "__main__":
-    app.run(debug=True)
 
 # @app.route('/cloud')
 # def plotly_wordcloud():
@@ -392,7 +388,7 @@ def auth():
 
     return { "authentic": True }
 
-@app.route('/bot-activity')
+@app.route('/bot-activity-check')
 def botActivity():
     url = request.args['url']
     i=0
