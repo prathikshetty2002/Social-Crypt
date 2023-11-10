@@ -28,15 +28,16 @@ jobs:
       run: |
         base_sha=${{ github.event.before }}
         head_sha=${{ github.sha }}
-        files=$(git diff --name-only $base_sha $head_sha | grep '\.py$')
-        if [ -z "$files" ]; then
+        changed_files=$(git diff --name-only $base_sha $head_sha | grep '\.py$' || echo "")
+        echo "Changed Python files: $changed_files"
+        if [ -z "$changed_files" ]; then
           echo "No Python files changed"
           exit 0
         fi
-        echo "::set-output name=files::$files"
+        echo "::set-output name=files::$changed_files"
 
     - name: Run Pylint on changed files
-      id: pylint
+      if: steps.files.outputs.files
       run: |
         pylint_output=$(pylint ${{ steps.files.outputs.files }} 2>&1) || true
         echo "::set-output name=output::$pylint_output"
