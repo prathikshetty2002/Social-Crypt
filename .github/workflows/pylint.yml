@@ -1,0 +1,54 @@
+name: Lint Changed Python Files
+
+on: [push, pull_request]
+
+jobs:
+  pylint:
+    name: Run Pylint on changed files
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Replace with your Python version
+
+    - name: Install Pylint
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+
+    - name: Get changed Python files
+      id: files
+      run: |
+        echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+        git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Run Pylint on changed files
+      if: env.CHANGED_FILES
+      run: |
+        pylint_output=$(pylint ${{ env.CHANGED_FILES }}) || true
+        pylint_exit_code=$?
+        echo "PYLINT_OUTPUT<<EOF" >> $GITHUB_ENV
+        echo "$pylint_output" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        echo "PYLINT_EXIT_CODE=$pylint_exit_code" >> $GITHUB_ENV
+
+    - name: Post results as a comment
+      if: env.PYLINT_EXIT_CODE != 0
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const output = `Pylint Results:\n\`\`\`\n${process.env.PYLINT_OUTPUT}\n\`\`\`\nPlease review the linting errors and make the necessary changes.`;
+          const issue_number = context.issue.number || context.payload.pull_request.number;
+          github.issues.createComment({
+            issue_number: issue_number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
