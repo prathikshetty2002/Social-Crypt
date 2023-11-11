@@ -28,9 +28,11 @@ jobs:
 
     - name: Get changed Python files
       run: |
-        echo "Base SHA: ${{ github.event.before }}"
-        echo "Head SHA: ${{ github.sha }}"
-        changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' || echo "")
+        base_sha="${{ github.event.pull_request.base.sha || github.event.before }}"
+        head_sha="${{ github.event.pull_request.head.sha || github.sha }}"
+        echo "Base SHA: $base_sha"
+        echo "Head SHA: $head_sha"
+        changed_files=$(git diff --name-only $base_sha $head_sha | grep '\.py$' || echo "")
         echo "Changed Python files: $changed_files"
         if [ -z "$changed_files" ]; then
           echo "No Python files changed"
@@ -50,6 +52,7 @@ jobs:
         else
           echo "No Python files changed"
         fi
+
     - name: Post results as a comment
       if: env.flake8_output
       uses: actions/github-script@v3
@@ -75,4 +78,3 @@ jobs:
           } else {
             console.log("No issue or pull request context available for commenting.");
           }
-    
