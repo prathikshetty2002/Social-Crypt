@@ -3,8 +3,12 @@ name: Lint Code Base
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**.py'
   pull_request:
     branches: [ main ]
+    paths:
+      - '**.py'
 
 jobs:
   build:
@@ -19,7 +23,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'  # Specify the Python version you are using
+        python-version: '3.x'
 
     - name: Install Dependencies
       run: |
@@ -28,8 +32,10 @@ jobs:
 
     - name: Get changed Python files
       run: |
-        git fetch origin ${{ github.base_ref }}
-        changed_files=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep '\.py$' || echo "")
+        base_sha=$(git merge-base ${{ github.event.pull_request.base.sha || github.base_ref }} ${{ github.sha }})
+        echo "Base SHA: $base_sha"
+        echo "Head SHA: ${{ github.sha }}"
+        changed_files=$(git diff --name-only $base_sha ${{ github.sha }} | grep '\.py$' || echo "")
         echo "Changed Python files: $changed_files"
         if [ -z "$changed_files" ]; then
           echo "No Python files changed"
@@ -57,21 +63,11 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const output = `Flake8 Lint Results:\n\`\`\`\n${{ env.flake8_output }}\n\`\`\``;
-          let issue_number;
+          const issue_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+          github.issues.createComment({
+            issue_number: issue_number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
     
-          if (context.payload.pull_request) {
-            issue_number = context.payload.pull_request.number;
-          } else if (context.issue) {
-            issue_number = context.issue.number;
-          }
-    
-          if (issue_number) {
-            github.issues.createComment({
-              issue_number: issue_number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
-          } else {
-            console.log("No issue or pull request context available for commenting.");
-          }
