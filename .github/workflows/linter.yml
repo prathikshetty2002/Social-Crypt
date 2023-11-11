@@ -1,0 +1,78 @@
+name: Lint Code Base
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Fetches all history for all branches and tags
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Specify the Python version you are using
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+
+    - name: Get changed Python files
+      run: |
+        echo "Base SHA: ${{ github.event.before }}"
+        echo "Head SHA: ${{ github.sha }}"
+        changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' || echo "")
+        echo "Changed Python files: $changed_files"
+        if [ -z "$changed_files" ]; then
+          echo "No Python files changed"
+          exit 0
+        fi
+        echo "changed_files=$changed_files" >> $GITHUB_ENV
+
+    - name: Run Flake8 on changed files
+      run: |
+        if [ -n "$changed_files" ]; then
+          echo "Running Flake8 on changed files:"
+          echo $changed_files
+          flake8_output=$(flake8 $changed_files --count --select=E9,F63,F7,F82 --show-source --statistics)
+          echo "flake8_output<<EOF" >> $GITHUB_ENV
+          echo "$flake8_output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        else
+          echo "No Python files changed"
+        fi
+    - name: Post results as a comment
+      if: env.flake8_output
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const output = `Flake8 Lint Results:\n\`\`\`\n${{ env.flake8_output }}\n\`\`\``;
+          let issue_number;
+    
+          if (context.payload.pull_request) {
+            issue_number = context.payload.pull_request.number;
+          } else if (context.issue) {
+            issue_number = context.issue.number;
+          }
+    
+          if (issue_number) {
+            github.issues.createComment({
+              issue_number: issue_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+          } else {
+            console.log("No issue or pull request context available for commenting.");
+          }
+    
