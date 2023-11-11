@@ -42,7 +42,9 @@ load_dotenv()
 
 print(os.getenv("HUGGINGFACE_API"))
 
-
+def tester():
+	print("its all right")
+	
 @app.route('/')
 def hello_geek():
     return '<h1>Hello from Flask & Docker</h2>'
