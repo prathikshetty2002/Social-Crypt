@@ -47,6 +47,9 @@ print(os.getenv("HUGGINGFACE_API"))
 def hello_geek():
     return '<h1>Hello from Flask & Docker</h2>'
 
+def checker():
+	print("prathik bhai ke samne koi kuch bol skta hai kya ayeee prathik bhaiiiii")
+	
 @app.route('/twitter')
 def twitter():
     query = request.args['query']
